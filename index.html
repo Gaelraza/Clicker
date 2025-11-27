@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Point Clicker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base styles */
+        body { font-family: system-ui, -apple-system, sans-serif; }
+
+        /* Custom Animations */
+        @keyframes pop {
+            0% { transform: scale(0.95); }
+            40% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        .anim-pop { animation: pop 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px) rotate(-6deg); }
+            40% { transform: translateX(6px) rotate(6deg); }
+            60% { transform: translateX(-3px) rotate(-3deg); }
+            80% { transform: translateX(3px) rotate(3deg); }
+        }
+        .anim-shake { animation: shake 0.5s ease-in-out; }
+
+        @keyframes flip {
+            0% { transform: rotateY(0); }
+            100% { transform: rotateY(360deg); }
+        }
+        .anim-flip { animation: flip 0.6s ease-out; }
+
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-25px) scale(1.1); }
+        }
+        .anim-jump { animation: jump 0.5s ease-out; }
+
+        @keyframes ripple {
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); transform: scale(1); }
+            70% { box-shadow: 0 0 0 20px rgba(139, 92, 246, 0); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); transform: scale(1); }
+        }
+        .anim-ripple { animation: ripple 0.8s ease-out; }
+
+        @keyframes glory {
+            0% { transform: scale(1); background-color: #7c3aed; }
+            50% { transform: scale(1.2); background-color: #ffd700; box-shadow: 0 0 30px #ffd700; }
+            100% { transform: scale(1); background-color: #7c3aed; }
+        }
+        .anim-glory { animation: glory 1s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+    <div id="root"></div>
+
+    <script type="module">
+        /**
+         * Point Clicker Application
+         * A single-file vanilla JS application demonstrating component-based architecture.
+         */
+        const App = {
+            // ----------------------------------------------------------------
+            // State: Centralized data management
+            // ----------------------------------------------------------------
+            state: {
+                title: "Point Clicker",
+                description: "A simple clicker to..... well, click.",
+                clickCount: 0
+            },
+
+            // ----------------------------------------------------------------
+            // Initialization
+            // ----------------------------------------------------------------
+            init() {
+                this.cacheDOM();
+                this.render(); 
+                // Note: bindEvents is called within render(), so we don't call it here
+                // to prevent duplicate event listeners (which caused the double-count bug).
+            },
+
+            cacheDOM() {
+                this.root = document.getElementById('root');
+            },
+
+            // ----------------------------------------------------------------
+            // Components: Functional templates
+            // ----------------------------------------------------------------
+            components: {
+                Header: (title) => `
+                    <header class="w-full bg-white border-b border-slate-200">
+                        <div class="max-w-3xl mx-auto px-6 py-8">
+                            <h1 class="text-4xl font-extrabold text-violet-700 tracking-tight text-center">${title}</h1>
+                        </div>
+                    </header>
+                `,
+                
+                Card: (description, count) => {
+                    // Animation Logic
+                    let animClass = "anim-pop"; 
+                    if (count === 10) animClass = "anim-shake";
+                    else if (count === 50) animClass = "anim-flip";
+                    else if (count === 100) animClass = "anim-jump";
+                    else if (count === 500) animClass = "anim-ripple";
+                    else if (count === 1000) animClass = "anim-glory";
+
+                    // Styling Logic (Progressive)
+                    let counterTheme = "text-2xl font-bold text-slate-600 bg-slate-100 border-slate-200";
+                    if (count >= 1000) {
+                        counterTheme = "text-4xl font-extrabold text-yellow-600 bg-yellow-50 border-yellow-200 shadow-lg shadow-yellow-100";
+                    } else if (count >= 500) {
+                        counterTheme = "text-4xl font-extrabold text-rose-600 bg-rose-50 border-rose-200 shadow-lg shadow-rose-100";
+                    } else if (count >= 100) {
+                        counterTheme = "text-4xl font-extrabold text-orange-600 bg-orange-50 border-orange-200 shadow-lg shadow-orange-100";
+                    } else if (count >= 50) {
+                        counterTheme = "text-4xl font-extrabold text-indigo-600 bg-indigo-50 border-indigo-200 shadow-lg shadow-indigo-100";
+                    } else if (count >= 10) {
+                        counterTheme = "text-4xl font-extrabold text-pink-600 bg-pink-50 border-pink-200 shadow-md shadow-pink-100";
+                    }
+
+                    return `
+                    <main class="max-w-3xl mx-auto px-6 py-12">
+                        <div class="bg-white rounded-3xl shadow-lg border border-slate-100 p-10 transition-all hover:shadow-xl text-center">
+                            <p class="text-xl text-slate-600 leading-relaxed mb-10 font-medium">
+                                ${description}
+                            </p>
+                            
+                            <!-- Interaction Area -->
+                            <div class="flex flex-col sm:flex-row items-center justify-center gap-8 mb-10">
+                                <button 
+                                    id="action-btn" 
+                                    aria-label="Add point"
+                                    aria-controls="counter-display"
+                                    class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-2xl text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-300 shadow-md ${animClass}"
+                                >
+                                    Click Me!
+                                </button>
+                                
+                                <div 
+                                    id="counter-display" 
+                                    role="status"
+                                    aria-live="polite"
+                                    aria-atomic="true"
+                                    class="${counterTheme} border-2 px-8 py-4 rounded-2xl transition-all duration-300 min-w-[150px] flex justify-center items-center ${animClass}"
+                                >
+                                    ${count} Points
+                                </div>
+                            </div>
+
+                            <!-- Reset Control -->
+                            <div class="flex justify-center border-t border-slate-100 pt-8">
+                                <button 
+                                    id="reset-btn"
+                                    class="text-sm font-semibold text-slate-400 hover:text-rose-500 transition-colors duration-200 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-rose-50"
+                                    aria-label="Reset counter"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                        <path d="M3 3v5h5"/>
+                                    </svg>
+                                    Reset Counter
+                                </button>
+                            </div>
+                        </div>
+                    </main>
+                `},
+
+                Footer: () => `
+                    <footer class="text-center py-8 text-slate-400 text-sm font-medium">
+                        <p>&copy; ${new Date().getFullYear()} Point Clicker App</p>
+                    </footer>
+                `
+            },
+
+            // ----------------------------------------------------------------
+            // Core Logic
+            // ----------------------------------------------------------------
+            render() {
+                if (!this.root) return;
+                
+                // Construct the UI
+                this.root.innerHTML = `
+                    <div class="min-h-screen flex flex-col bg-slate-50">
+                        ${this.components.Header(this.state.title)}
+                        ${this.components.Card(this.state.description, this.state.clickCount)}
+                        ${this.components.Footer()}
+                    </div>
+                `;
+                
+                // Re-bind events after DOM update
+                this.bindEvents();
+            },
+
+            bindEvents() {
+                // Main Click Button
+                const btn = document.getElementById('action-btn');
+                if (btn) {
+                    btn.addEventListener('click', () => this.handleButtonClick());
+                }
+
+                // Reset Button
+                const resetBtn = document.getElementById('reset-btn');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', () => this.handleResetClick());
+                }
+            },
+
+            handleButtonClick() {
+                this.state.clickCount++;
+                this.render();
+            },
+
+            handleResetClick() {
+                if (confirm("Are you sure you want to reset your score?")) {
+                    this.state.clickCount = 0;
+                    this.render();
+                }
+            }
+        };
+
+        // Boot
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+</body>
+</html>

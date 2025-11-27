@@ -1,0 +1,5 @@
+{
+  "name": "Simple Website",
+  "description": "A minimal single-page application displaying a simple greeting.",
+  "requestFramePermissions": []
+}
