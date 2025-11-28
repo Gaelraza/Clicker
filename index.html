@@ -3,9 +3,26 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Point Clicker is a fun, lightweight browser game built with Vanilla JavaScript. Experience dynamic animations, progressive styling, and satisfying click interactions." />
-    <meta name="keywords" content="clicker game, point clicker, vanilla js, simple game, stress relief, browser game, javascript animation" />
-    <title>Point Clicker - The Satisfying Vanilla JS Game</title>
+    
+    <!-- Organic SEO Metadata -->
+    <title>Point Clicker - Cozy & Satisfying Stress Relief Game</title>
+    <meta name="description" content="Relax with Point Clicker, a cozy and satisfying browser game designed for stress relief. No ads, no loading, just simple clicking fun to cure boredom." />
+    <meta name="keywords" content="cozy game, stress relief game, simple clicker, relaxing browser game, cure boredom, satisfying clicks, point clicker, fidget toy online, minimal game" />
+    <meta name="author" content="Point Clicker" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Point Clicker - Simple & Cozy Stress Relief" />
+    <meta property="og:description" content="A quiet corner of the internet to click, breathe, and watch numbers go up. The perfect cozy break." />
+    <meta property="og:site_name" content="Point Clicker" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Point Clicker - Cozy Stress Relief" />
+    <meta name="twitter:description" content="Need a break? Come click the button. It's oddly satisfying." />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Base styles */
@@ -53,6 +70,18 @@
             100% { transform: scale(1); background-color: #7c3aed; }
         }
         .anim-glory { animation: glory 1s ease-in-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .anim-fade-in { animation: fadeIn 0.2s ease-out; }
+        
+        @keyframes scaleUp {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .anim-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
@@ -70,7 +99,10 @@
             state: {
                 title: "Point Clicker",
                 description: "A simple clicker to..... well, click.",
-                clickCount: 0
+                // Load from LocalStorage if available
+                clickCount: parseInt(localStorage.getItem('pc_count')) || 0,
+                highScores: JSON.parse(localStorage.getItem('pc_scores')) || [],
+                showResetModal: false
             },
 
             // ----------------------------------------------------------------
@@ -79,12 +111,23 @@
             init() {
                 this.cacheDOM();
                 this.render(); 
-                // Note: bindEvents is called within render(), so we don't call it here
-                // to prevent duplicate event listeners (which caused the double-count bug).
             },
 
             cacheDOM() {
                 this.root = document.getElementById('root');
+            },
+
+            // ----------------------------------------------------------------
+            // Helpers
+            // ----------------------------------------------------------------
+            persist() {
+                localStorage.setItem('pc_count', this.state.clickCount);
+                localStorage.setItem('pc_scores', JSON.stringify(this.state.highScores));
+            },
+
+            formatDate(isoString) {
+                const date = new Date(isoString);
+                return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             },
 
             // ----------------------------------------------------------------
@@ -123,7 +166,7 @@
                     }
 
                     return `
-                    <main class="max-w-3xl mx-auto px-6 py-12">
+                    <section class="max-w-3xl mx-auto px-6 py-12">
                         <div class="bg-white rounded-3xl shadow-lg border border-slate-100 p-10 transition-all hover:shadow-xl text-center">
                             <p class="text-xl text-slate-600 leading-relaxed mb-10 font-medium">
                                 ${description}
@@ -155,19 +198,92 @@
                             <div class="flex justify-center border-t border-slate-100 pt-8">
                                 <button 
                                     id="reset-btn"
-                                    class="text-sm font-semibold text-slate-400 hover:text-rose-500 transition-colors duration-200 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-rose-50"
-                                    aria-label="Reset counter"
+                                    class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 font-bold text-rose-600 transition-all duration-200 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 hover:border-rose-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+                                    aria-label="Finish run and save score"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <span>Finish Run & Reset</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                                         <path d="M3 3v5h5"/>
                                     </svg>
-                                    Reset Counter
                                 </button>
                             </div>
                         </div>
-                    </main>
+                    </section>
                 `},
+
+                ResetModal: (score) => `
+                    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 anim-fade-in" role="dialog" aria-modal="true">
+                        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full border border-slate-100 text-center anim-scale-up">
+                            <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Finish Run?</h3>
+                            <p class="text-slate-500 mb-8 leading-relaxed">
+                                You are about to bank <span class="font-bold text-violet-600">${score} points</span> to the leaderboard and reset your counter.
+                            </p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button id="modal-cancel" class="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors focus:ring-2 focus:ring-slate-300">
+                                    Cancel
+                                </button>
+                                <button id="modal-confirm" class="px-6 py-3 rounded-xl font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200 transition-all hover:scale-105 focus:ring-2 focus:ring-rose-400">
+                                    Confirm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `,
+
+                Leaderboard: (scores, formatDateFunc) => {
+                    const hasScores = scores.length > 0;
+                    
+                    let listContent = '';
+                    
+                    if (!hasScores) {
+                        listContent = `
+                            <div class="text-center py-6 text-slate-400 italic">
+                                No records yet. Start clicking and reset to save your score!
+                            </div>
+                        `;
+                    } else {
+                        listContent = `
+                            <div class="overflow-hidden rounded-xl border border-slate-100">
+                                <table class="w-full text-left text-sm text-slate-600">
+                                    <thead class="bg-slate-50 text-slate-800 font-semibold">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-4">Rank</th>
+                                            <th scope="col" class="px-6 py-4">Score</th>
+                                            <th scope="col" class="px-6 py-4 text-right">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 bg-white">
+                                        ${scores.map((s, index) => `
+                                            <tr class="hover:bg-slate-50 transition-colors">
+                                                <td class="px-6 py-4 font-medium text-slate-400">#${index + 1}</td>
+                                                <td class="px-6 py-4 font-bold text-violet-600">${s.score}</td>
+                                                <td class="px-6 py-4 text-right text-slate-400">${formatDateFunc(s.date)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                    <section class="max-w-3xl mx-auto px-6 pb-12" aria-labelledby="leaderboard-heading">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 id="leaderboard-heading" class="text-2xl font-bold text-violet-700">Local Leaderboard</h2>
+                                <span class="text-xs font-medium px-3 py-1 bg-violet-50 text-violet-600 rounded-full">Top 5 Runs</span>
+                            </div>
+                            ${listContent}
+                        </div>
+                    </section>
+                    `;
+                },
 
                 SEOSection: () => `
                     <section class="max-w-3xl mx-auto px-6 pb-12" aria-labelledby="about-heading">
@@ -216,14 +332,22 @@
                 if (!this.root) return;
                 
                 // Construct the UI
-                this.root.innerHTML = `
-                    <div class="min-h-screen flex flex-col bg-slate-50">
+                let html = `
+                    <div class="min-h-screen flex flex-col bg-slate-50 relative">
                         ${this.components.Header(this.state.title)}
                         ${this.components.Card(this.state.description, this.state.clickCount)}
+                        ${this.components.Leaderboard(this.state.highScores, this.formatDate)}
                         ${this.components.SEOSection()}
                         ${this.components.Footer()}
                     </div>
                 `;
+
+                // Render Modal if active
+                if (this.state.showResetModal) {
+                    html += this.components.ResetModal(this.state.clickCount);
+                }
+
+                this.root.innerHTML = html;
                 
                 // Re-bind events after DOM update
                 this.bindEvents();
@@ -236,23 +360,65 @@
                     btn.addEventListener('click', () => this.handleButtonClick());
                 }
 
-                // Reset Button
+                // Reset Button (Triggers Modal)
                 const resetBtn = document.getElementById('reset-btn');
                 if (resetBtn) {
                     resetBtn.addEventListener('click', () => this.handleResetClick());
                 }
+
+                // Modal Buttons
+                if (this.state.showResetModal) {
+                    const confirmBtn = document.getElementById('modal-confirm');
+                    const cancelBtn = document.getElementById('modal-cancel');
+                    
+                    if (confirmBtn) confirmBtn.addEventListener('click', () => this.handleConfirmReset());
+                    if (cancelBtn) cancelBtn.addEventListener('click', () => this.handleCancelReset());
+                }
             },
 
             handleButtonClick() {
+                // Prevent clicking if modal is open
+                if (this.state.showResetModal) return;
+
                 this.state.clickCount++;
+                this.persist();
                 this.render();
             },
 
             handleResetClick() {
-                if (confirm("Are you sure you want to reset your score?")) {
-                    this.state.clickCount = 0;
-                    this.render();
+                if (this.state.clickCount === 0) {
+                    alert("Click some more before resetting!");
+                    return;
                 }
+                this.state.showResetModal = true;
+                this.render();
+            },
+
+            handleCancelReset() {
+                this.state.showResetModal = false;
+                this.render();
+            },
+
+            handleConfirmReset() {
+                const currentScore = this.state.clickCount;
+
+                // Add new score
+                this.state.highScores.push({
+                    score: currentScore,
+                    date: new Date().toISOString()
+                });
+
+                // Sort descending and keep top 5
+                this.state.highScores.sort((a, b) => b.score - a.score);
+                this.state.highScores = this.state.highScores.slice(0, 5);
+
+                // Reset count
+                this.state.clickCount = 0;
+                this.state.showResetModal = false;
+                
+                // Save and Render
+                this.persist();
+                this.render();
             }
         };
 
