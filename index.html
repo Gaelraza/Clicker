@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Point Clicker</title>
+    <meta name="description" content="Point Clicker is a fun, lightweight browser game built with Vanilla JavaScript. Experience dynamic animations, progressive styling, and satisfying click interactions." />
+    <meta name="keywords" content="clicker game, point clicker, vanilla js, simple game, stress relief, browser game, javascript animation" />
+    <title>Point Clicker - The Satisfying Vanilla JS Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Base styles */
@@ -167,6 +169,39 @@
                     </main>
                 `},
 
+                SEOSection: () => `
+                    <section class="max-w-3xl mx-auto px-6 pb-12" aria-labelledby="about-heading">
+                        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-slate-600">
+                            <h2 id="about-heading" class="text-2xl font-bold text-violet-700 mb-4">Why Point Clicker?</h2>
+                            <p class="mb-6 leading-relaxed">
+                                Welcome to your quiet little corner of the internet. 
+                                Whether you are taking a break from work, waiting for a download, or just want to zone out for a bit, 
+                                this is the perfect place to relax. Just click, breathe, and watch the numbers go up.
+                            </p>
+                            
+                            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-2">✨ Hidden Surprises</h3>
+                                    <p class="text-sm">You get a different animation after each milestone. It is up to you to find them all!</p>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-2">🎨 Colorful Journey</h3>
+                                    <p class="text-sm">Watch the colors shift and change as you progress. It's a little visual treat for your efforts.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Simply Cozy</h3>
+                                <p class="text-sm">
+                                    No loading screens, no complex menus, and absolutely no stress. 
+                                    Just a simple, straightforward button that is always ready when you are. 
+                                    Grab a cup of tea and click away.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                `,
+
                 Footer: () => `
                     <footer class="text-center py-8 text-slate-400 text-sm font-medium">
                         <p>&copy; ${new Date().getFullYear()} Point Clicker App</p>
@@ -185,6 +220,7 @@
                     <div class="min-h-screen flex flex-col bg-slate-50">
                         ${this.components.Header(this.state.title)}
                         ${this.components.Card(this.state.description, this.state.clickCount)}
+                        ${this.components.SEOSection()}
                         ${this.components.Footer()}
                     </div>
                 `;
